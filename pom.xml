@@ -6,7 +6,7 @@
 
     <groupId>me.tomsdevsn</groupId>
     <artifactId>hetznercloud-apitest</artifactId>
-    <version>0.1</version>
+    <version>0.5</version>
 
     <name>HetznerCloud-API Test</name>
     <url>https://github.com/TomSDEVSN/hetznercloud-java/tree/testclient</url>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>me.tomsdevsn</groupId>
             <artifactId>hetznercloud-api</artifactId>
-            <version>0.1</version>
+            <version>0.5</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
