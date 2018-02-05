@@ -6,6 +6,8 @@ import me.tomsdevsn.hetznercloud.objects.request.*;
 import me.tomsdevsn.hetznercloud.objects.response.*;
 
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 public class HetznerCloudAPITest {
@@ -32,7 +34,7 @@ public class HetznerCloudAPITest {
                                       .location("fsn1")
                                       .image("ubuntu-16.04")
                                       .startAfterCreate(true)
-                                      .sshKeys(Arrays.asList(2991L))
+                                      .sshKeys(Arrays.asList(2991L)) // Optional
                                       .build();
 
         ResponseServer server = cloudAPI.createServer(requestServer);
@@ -52,6 +54,10 @@ public class HetznerCloudAPITest {
                 "Login data:\n" +
                 "Username: root" +
                 ((server.getRootPassword() == null) ? "" : "\nPassword (if not SSH-Key used): " + server.getRootPassword()));
+
+        /* Needed for the Metrics */
+        Date startDate = Calendar.getInstance().getTime();
+        String start = cloudAPI.convertToISO8601(startDate);
 
         /* Actions for a Server */
         ResponseActionsServer allActions = cloudAPI.getAllActionsOfServer(serverID);
@@ -78,7 +84,7 @@ public class HetznerCloudAPITest {
                             "Password: " + cloudAPI.resetRootPassword(serverID).getRootPassword());
 
         try {
-            TimeUnit.SECONDS.sleep(3);
+            TimeUnit.SECONDS.sleep(2);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -109,5 +115,44 @@ public class HetznerCloudAPITest {
         System.out.println("\n" +
                 "Server name changed.\n" +
                 "New name: " + responseServernameChange.getServer().getName());
+
+        try {
+            TimeUnit.MINUTES.sleep(2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        /* Get Metrics */
+
+        /* For a specific Date
+         Calendar startCalendar = Calendar.getInstance();
+         startCalendar.set(Calendar.YEAR, 2018);
+         startCalendar.set(Calendar.MONTH, Calendar.FEBRUARY);
+         startCalendar.set(Calendar.DAY_OF_MONTH, 3);
+         startCalendar.set(Calendar.HOUR_OF_DAY, 14);
+         startCalendar.set(Calendar.MINUTE, 0);
+
+         Date startDate = startCalendar.getTime();
+         String start = cloudAPI.convertToISO8601(startDate);
+         */
+
+        Date endDate = Calendar.getInstance().getTime();
+        String end = cloudAPI.convertToISO8601(endDate);
+
+        ResponseMetrics responseMetrics = cloudAPI.getMetrics(serverID, "cpu,disk", start, end);
+
+        System.out.println("Metrics Steps of CPU and Disk:\n" +
+                responseMetrics.getMetrics().getStep());
+
+        /* Rescue and reset */
+        RequestEnableRescue requestEnableRescue = RequestEnableRescue.builder()
+                                                  .type("linux64")
+                                                  .sshKeys(Arrays.asList(2991L))
+                                                  .build();
+
+        ResponseEnableRescue responseEnableRescue = cloudAPI.enableRescueAndReset(serverID, requestEnableRescue);
+
+        System.out.println("Enabled Rescue and cuts Power for Server.\n" +
+                           ((responseEnableRescue.getRootPassword() == null) ? "" : "\nPassword: " + responseEnableRescue.getRootPassword()));
     }
 }
